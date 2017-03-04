@@ -1,0 +1,15 @@
+EspEasy_ip 192.168.0.171
+EspEasy_port 23
+Domoticz_serverip 192.168.0.115
+Domoticz_serverport 80
+weatherstation_THB_idx 25
+weatherstation_TFA_idx 26
+weatherstation_UV_idx 27
+weatherstation_RAIN_idx 28
+weatherstation_VIS_idx 29
+weatherstation_SR_idx 30
+650007 57
+650014 56
+650018 59
+650015 53
+650017 55

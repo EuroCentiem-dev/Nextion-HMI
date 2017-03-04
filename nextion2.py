@@ -9,8 +9,7 @@ import domoticz.client
 
 CRLF = '\r\n'
 
-server_ip ='192.168.0.171'
-server_port ='23'
+
 class nextion():
 
 	ERRORS={
@@ -183,6 +182,19 @@ class nextion():
 		t.join()
 		return self.command
 		
+	def setText(self,id,value):
+		s =self.nxWrite(id+'.txt="'+str(value)+'"')
+		print >>sys.stderr, 'code recieved "%s"' % s
+		print >>sys.stderr, 'code recieved @ setText"%s"' % s[:2]
+		#if s[:2]!='01' and len(s) == 8 and s!=None:
+			##raise ValueError(nextion.getErrorMessage(s[0])+": id: "+id+" text:"+ value)
+			#print >>sys.stderr, nextion.getErrorMessage(s[:2])+": id: "+id+" text:"+ value
+			#return
+			##raise ValueError(nextion.getErrorMessage(s[:2])+": id: "+id+" text:"+ value)
+		#else:
+			#return s
+		return
+			
 	def drawCircle(self,x,y,r,color):
 		s=self.nxWrite('cir %s,%s,%s,%s' % (x,y,r,color))
 		#if s[0]!=0x01:
@@ -191,23 +203,36 @@ class nextion():
 	@staticmethod
 	def getErrorMessage(s):
 		return nextion.ERRORS[s]
-		return
+		
 
 	def nxWrite(self,s):
-		## Send data
-		#message = s.decode('hex') + chr(255) + chr(255) + chr(255)+CRLF
-		s =s.encode('hex') + chr(255) + chr(255) + chr(255)+CRLF
+		s =    s+chr(255) + chr(255) + chr(255) 
 		print >>sys.stderr, 'sending "%s"' % s
-		sock.sendall(s)
-		data = self.nxRead()
+		sock.send(s)
+		data = self.nxRead(s)
 		print data
-		return data 
-    
+		return data
+
 	def nxWait(self):
 		return 'wait'
 		
 
 if __name__ == "__main__":
+	
+	cnx={}
+	with open('test2.txt','r') as f:
+		for line in f:
+			key,val=line.split()
+			cnx[key]=val
+	print cnx
+	
+	#
+	# Put all variables to 
+	#
+	
+	server_ip =cnx['EspEasy_ip']
+	server_port =cnx['EspEasy_port']
+	
 
 	def get_constants(prefix):
 		"""Create a dictionary mapping socket module constants to their names."""
@@ -229,22 +254,25 @@ if __name__ == "__main__":
 	print >>sys.stderr, 'Protocol:', protocols[sock.proto]
 	print >>sys.stderr
 	
+
 	nextion_client = nextion(sock)
 	dmz = domoticz.client.client()
 	#Create a unique Name
 	
+
 	#load configuration from domoticz
 	AllDevices = dmz.getDevices()
 	
-	#print AllDevices['servertime']
+	#print AllDevices['Sunrise']
 	#print AllDevices['sunrise']
 	#print AllDevices['sunset']
 	#print AllDevices
 	
+	#MijnBericht = nextion_client.setText('Sunrise',AllDevices['Sunrise'])
+	#MijnBericht = nextion_client.setText('Sunset',AllDevices['Sunset'])
 	while True:
-			# Read ATAG data
+
 		MijnBericht = nextion_client.nxRead()
-		#nextion_client.nxWrite('66666666')
 		print "*** Jumping to main" 
 		print MijnBericht
 		MijnData = nextion_client.nxAnalyze(MijnBericht)
@@ -253,38 +281,8 @@ if __name__ == "__main__":
 		Event = MijnData[0]
 		if Event['EventID']=='65':
 			print 'touch gevonden'
-		#nextion_client.drawCircle(100,100,50,nextion_client.BROWN)
-		  
-		#time.sleep(1)
-		
-
-		
-	#nextion_client.nxRead('65001501')
-	#try:
-		## Send data
-		#message2 = 'at'
-		#print >>sys.stderr, 'sending "%s"' % message2
-		#sock.sendall(message2)
-		#message=''
-
-
-		#while True:
-			#nextion_client.nxWait()
-			#data = sock.recv(512)
-			#while CRLF in data:
-				#message =data[:data.index(CRLF)]
-				#data = data[data.index(CRLF)+2:]
-			#message.encode("hex")
-			#message = message + data
-			#print 'encoded is this', message , LF.decode('hex')
-			#print >>sys.stderr, 'received "%s"' % message
-			#if LF.decode('hex') in message:
-				#print True
-				#nextion_client.nxRead(message)
-				#message=''
-
-	#finally:
-		#print >>sys.stderr, 'closing socket'
-		#sock.close()
-
-
+			dmz_command=Event['EventID']+ Event['PageID']+ Event['ComponentID']
+			print dmz_command
+			if dmz_command in cnx:
+				dmz.putToggle(cnx[dmz_command])
+				
